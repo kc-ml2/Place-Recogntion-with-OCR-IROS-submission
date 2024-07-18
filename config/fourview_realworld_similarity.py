@@ -1,0 +1,14 @@
+class CamConfig:
+    NUM_CAMERA = 4
+    WIDTH = 640
+    HEIGHT = 480
+    SENSOR_HEIGHT = 0.5
+
+
+class DataConfig:
+    NUMPY_SEED = 1
+    NUM_PARTICLES = 10000
+    REMOVE_ISOLATED = True
+    USE_SIMILARITY = True
+    SIMILARITY_THRESHOLD = 0.7
+    METERS_PER_PIXEL = 0.1078

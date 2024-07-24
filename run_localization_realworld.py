@@ -7,14 +7,15 @@ from paddleocr import PaddleOCR
 import textdistance as td
 
 from environment.depth_sensor import DepthSensor
-from localization.ocr_probability_map import OCRProbabilityMap
+from localization.ocr_gaussian_map import OCRProbabilityMap
 from localization.particle import Particle
 from utils.config_import import load_config_module
 from utils.map_utils import open_store_info, sparse_to_dense_grid
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config/fourview_realworld_similarity.py")
+    parser.add_argument("--config", default="config/fourview_realworld_similarity_adding.py")
+    # parser.add_argument("--config", default="config/fourview_realworld_similarity.py")
     parser.add_argument("--visualize", action="store_true")
     args, _ = parser.parse_known_args()
     module_name = args.config
@@ -91,9 +92,15 @@ if __name__ == "__main__":
                 similarity_mat[i][j] = td.levenshtein.normalized_similarity(store_lowered, single_word)
 
         # Run localization algorithm with suggested method
-        result_particle_id, probability_by_particle = probability_map.localize_with_ocr(
-            particles, depth_sensor, box_result, depth_img_batch, similarity_mat
-        )
+        if config.DataConfig.USE_ADDING_PROB:
+            # result_particle_id, probability_by_particle = probability_map.localize_with_ocr_adding(
+            result_particle_id, probability_by_particle = probability_map.localize_with_ocr_baseline(
+                particles, depth_sensor, box_result, depth_img_batch, similarity_mat
+            )
+        else:
+            result_particle_id, probability_by_particle = probability_map.localize_with_ocr(
+                particles, depth_sensor, box_result, depth_img_batch, similarity_mat
+            )
 
         # Get estimated position. Project to 2D floor plan, and convert coordinate
         result_position = particles.translations[result_particle_id]  # x,y,z

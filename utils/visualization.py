@@ -24,9 +24,37 @@ def init_map_display(window_name="map", x_size=1152, y_size=864):
     cv2.moveWindow(window_name, 10, -20)
 
 
+def display_weighted_map(topdown_map, weighted_points, window_name="map", wait_for_key=True):
+    blank_img = np.zeros(np.shape(topdown_map))
+    blank_img = blank_img.astype(np.uint8)
+
+    for pnt in weighted_points:
+        weight = int(pnt[2] * 255)
+
+        cv2.circle(
+            img=blank_img,
+            center=(int(pnt[0]), int(pnt[1])),
+            radius=8,
+            color=(weight, weight, weight),
+            thickness=-1,
+        )
+
+    heatmap_img = cv2.applyColorMap(blank_img, cv2.COLORMAP_JET)
+
+    # heatmap_img[np.all(heatmap_img == [128, 0, 0], axis=-1)] = 255
+    # heatmap_img[np.all(heatmap_img == [0, 0, 128], axis=-1)] = 255
+    # heatmap_img[np.all(heatmap_img == [255, 255, 255], axis=-1)] = 0
+
+    # topdown_map[np.any(heatmap_img != [0, 0, 0], axis=-1)] = 0
+    # topdown_map = cv2.add(topdown_map, heatmap_img)
+
+    # cv2.imshow(window_name, topdown_map)
+    cv2.imshow(window_name, heatmap_img)
+    if wait_for_key:
+        cv2.waitKey()
+
 def display_map(topdown_map, window_name="map", key_points=None, wait_for_key=False):
     """Display a topdown map with OpenCV."""
-
     if key_points is not None:
         for pnt in key_points:
             cv2.drawMarker(

@@ -2,6 +2,7 @@ import argparse
 import os
 
 import cv2
+from sklearn.preprocessing import minmax_scale
 import numpy as np
 from paddleocr import PaddleOCR
 import textdistance as td
@@ -11,6 +12,8 @@ from localization.ocr_gaussian_map import OCRProbabilityMap
 from localization.particle import Particle
 from utils.config_import import load_config_module
 from utils.map_utils import open_store_info, sparse_to_dense_grid
+from utils.visualization import init_map_display, display_weighted_map
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -32,7 +35,8 @@ if __name__ == "__main__":
     store_list, store_points, num_stores = open_store_info()
 
     # Get list of observation images
-    query_dir = "./data/query_imgs/"
+    # query_dir = "./data/query_imgs/"
+    query_dir = "./data/query_imgs_copy/"
     query_list = sorted(os.listdir(query_dir))
     num_queries = len(query_list)
     query_idx = np.arange(start=0, stop=num_queries, step=4)
@@ -44,6 +48,11 @@ if __name__ == "__main__":
     probability_map = OCRProbabilityMap(config, particles, store_points)
 
     total_distance_list = []
+
+    if is_visualize:
+        img_path = "./data/picmap(HD_scale).png"
+        map_img = cv2.imread(img_path)
+        init_map_display()
 
     for id in query_idx:
         query_pos_str = query_list[id][:6]
@@ -93,14 +102,46 @@ if __name__ == "__main__":
 
         # Run localization algorithm with suggested method
         if config.DataConfig.USE_ADDING_PROB:
-            # result_particle_id, probability_by_particle = probability_map.localize_with_ocr_adding(
-            result_particle_id, probability_by_particle = probability_map.localize_with_ocr_baseline(
+            result_particle_id, probability_by_particle = probability_map.localize_with_ocr_adding(
+            # result_particle_id, probability_by_particle = probability_map.localize_with_ocr_baseline(
+            # result_particle_id, probability_by_particle = probability_map.localize_with_ocr_baseline2(
                 particles, depth_sensor, box_result, depth_img_batch, similarity_mat
             )
         else:
             result_particle_id, probability_by_particle = probability_map.localize_with_ocr(
                 particles, depth_sensor, box_result, depth_img_batch, similarity_mat
             )
+
+        # if is_visualize:
+        #     positions = np.delete(particles.translations, 1, axis=1)
+        #     # probability_by_particle = np.log(probability_by_particle)
+        #     normalized_list = minmax_scale(probability_by_particle)
+        #     normalized_array = np.expand_dims(np.array(normalized_list), axis=1)
+        #     weighted_particles = np.concatenate([positions, normalized_array], axis=1)
+
+        #     display_weighted_map(map_img, weighted_particles)
+        
+        if is_visualize:
+            positions = np.delete(particles.translations, 1, axis=1)
+            # probability_by_particle = np.log(probability_by_particle)
+            probability_by_particle = np.expand_dims(np.array(probability_by_particle), axis=1)
+            weighted_particles = np.concatenate([positions, probability_by_particle], axis=1)
+            sorted_weighted_particles = weighted_particles[weighted_particles[:, 2].argsort()[::-1]]
+            
+            id = 0
+            for i, value in enumerate(sorted_weighted_particles):
+                if value[2] != 1.0:
+                    id = i
+                    break
+            sorted_weighted_particles = sorted_weighted_particles[id:]
+
+            weight_list = sorted_weighted_particles[:, 2]
+            normalized_list = minmax_scale(weight_list)
+            normalized_array = np.expand_dims(np.array(normalized_list), axis=1)
+
+            weighted_particles = np.concatenate([sorted_weighted_particles[:, :2], normalized_array], axis=1)
+
+            display_weighted_map(map_img, weighted_particles)
 
         # Get estimated position. Project to 2D floor plan, and convert coordinate
         result_position = particles.translations[result_particle_id]  # x,y,z

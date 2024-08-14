@@ -1,6 +1,5 @@
 opencv-python
 timm==0.6.7
-gdown
 textdistance
 numpy==1.23.5  # For both paddle OCR and Habitat
 numpy-quaternion==2021.7.13.7.29.27

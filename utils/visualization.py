@@ -41,15 +41,13 @@ def display_weighted_map(topdown_map, weighted_points, window_name="map", wait_f
 
     heatmap_img = cv2.applyColorMap(blank_img, cv2.COLORMAP_JET)
 
-    # heatmap_img[np.all(heatmap_img == [128, 0, 0], axis=-1)] = 255
-    # heatmap_img[np.all(heatmap_img == [0, 0, 128], axis=-1)] = 255
-    # heatmap_img[np.all(heatmap_img == [255, 255, 255], axis=-1)] = 0
+    heatmap_img[np.all(heatmap_img == [128, 0, 0], axis=-1)] = 0
+    heatmap_img[np.all(heatmap_img == [0, 0, 0], axis=-1)] = 0
 
-    # topdown_map[np.any(heatmap_img != [0, 0, 0], axis=-1)] = 0
-    # topdown_map = cv2.add(topdown_map, heatmap_img)
+    topdown_map[np.any(heatmap_img != [0, 0, 0], axis=-1)] = 0
+    topdown_map = cv2.add(topdown_map, heatmap_img)
 
-    # cv2.imshow(window_name, topdown_map)
-    cv2.imshow(window_name, heatmap_img)
+    cv2.imshow(window_name, topdown_map)
     if wait_for_key:
         cv2.waitKey()
 

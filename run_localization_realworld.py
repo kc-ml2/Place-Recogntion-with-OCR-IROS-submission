@@ -35,8 +35,7 @@ if __name__ == "__main__":
     store_list, store_points, num_stores = open_store_info()
 
     # Get list of observation images
-    # query_dir = "./data/query_imgs/"
-    query_dir = "./data/query_imgs_copy/"
+    query_dir = "./data/query_imgs/"
     query_list = sorted(os.listdir(query_dir))
     num_queries = len(query_list)
     query_idx = np.arange(start=0, stop=num_queries, step=4)
@@ -112,18 +111,8 @@ if __name__ == "__main__":
                 particles, depth_sensor, box_result, depth_img_batch, similarity_mat
             )
 
-        # if is_visualize:
-        #     positions = np.delete(particles.translations, 1, axis=1)
-        #     # probability_by_particle = np.log(probability_by_particle)
-        #     normalized_list = minmax_scale(probability_by_particle)
-        #     normalized_array = np.expand_dims(np.array(normalized_list), axis=1)
-        #     weighted_particles = np.concatenate([positions, normalized_array], axis=1)
-
-        #     display_weighted_map(map_img, weighted_particles)
-        
         if is_visualize:
             positions = np.delete(particles.translations, 1, axis=1)
-            # probability_by_particle = np.log(probability_by_particle)
             probability_by_particle = np.expand_dims(np.array(probability_by_particle), axis=1)
             weighted_particles = np.concatenate([positions, probability_by_particle], axis=1)
             sorted_weighted_particles = weighted_particles[weighted_particles[:, 2].argsort()[::-1]]
